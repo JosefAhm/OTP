@@ -241,13 +241,6 @@ export function CreateSecretForm() {
   return (
     <div className="card" style={{ display: "grid", gap: "1.5rem" }}>
       <header style={{ display: "grid", gap: "0.5rem" }}>
-        <div className="badge badge-box" title="End-to-end encrypted" aria-label="End-to-end encrypted">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" style={{ width: 14, height: 14 }}>
-            <rect x="5" y="11" width="14" height="10" rx="2" />
-            <path d="M7 11V8a5 5 0 0 1 10 0v3" />
-          </svg>
-          <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>Encrypted</span>
-        </div>
         <h1 style={{ fontSize: "2rem", fontWeight: 700, margin: 0 }}>Share secrets safely.</h1>
         <p className="text-subtle" style={{ margin: 0 }}>
           Encrypt a note with a randomly generated key. The link self-destructs the moment it is
