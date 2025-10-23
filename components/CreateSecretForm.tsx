@@ -274,8 +274,7 @@ export function CreateSecretForm() {
             </button>
           </div>
           <p className="text-subtle" style={{ margin: 0 }}>
-            Keep the secret key safe — it never touches our servers. Anyone with this link can view the message exactly
-            once.
+            Keep the secret key safe — anyone with this link can view the message exactly once.
           </p>
           {expiryDisplay && (
             <p className="text-subtle" style={{ margin: 0 }}>
