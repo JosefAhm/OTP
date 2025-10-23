@@ -21,17 +21,6 @@ export default function CustomDropdown({
   const listRef = useRef<HTMLUListElement | null>(null);
 
   useEffect(() => {
-    function onDocumentClick(e: MouseEvent) {
-      if (!buttonRef.current) return;
-      if (buttonRef.current.contains(e.target as Node)) return;
-      if (listRef.current && listRef.current.contains(e.target as Node)) return;
-      setOpen(false);
-    }
-    document.addEventListener("click", onDocumentClick);
-    return () => document.removeEventListener("click", onDocumentClick);
-  }, []);
-
-  useEffect(() => {
     if (!open) {
       setHighlightIndex(null);
     }
@@ -130,7 +119,7 @@ export default function CustomDropdown({
                 key={opt.value}
                 role="option"
                 aria-selected={selected}
-                onClick={() => handleSelect(opt.value)}
+                onClick={(e) => { e.stopPropagation(); handleSelect(opt.value); }}
                 onMouseEnter={() => setHighlightIndex(idx)}
                 style={{
                   background: highlighted ? "rgb(30, 41, 59)" : "transparent",
