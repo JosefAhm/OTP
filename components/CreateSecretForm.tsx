@@ -238,8 +238,15 @@ export function CreateSecretForm() {
     }
   };
 
-  return (
-    <div className="card" style={{ display: "grid", gap: "2rem" }}>
+  const handleCreateNew = () => {
+    setState(initialState);
+    setShareUrl(null);
+    setCopyStatus(null);
+    setShowCopyPopup(false);
+  };
+
+  const renderForm = () => (
+    <>
       <header style={{ display: "grid", gap: "0.65rem" }}>
         <h1 style={{ fontSize: "2.1rem", fontWeight: 600, lineHeight: 1.2, margin: 0 }}>
           Share secrets safely.
@@ -260,7 +267,7 @@ export function CreateSecretForm() {
             rows={6}
             required
             maxLength={MAX_CHARACTERS}
-            style={{ resize: 'none' }}
+            style={{ resize: "none" }}
           />
         </label>
 
@@ -273,38 +280,73 @@ export function CreateSecretForm() {
       </form>
 
       {state.status === "error" && <div className="alert">{state.error}</div>}
+    </>
+  );
 
-      {state.status === "success" && shareUrl && (
-        <section style={{ display: "grid", gap: "0.9rem" }}>
-          <div className="copy-input">
-            <code
-              style={{
-                overflowWrap: "anywhere",
-                fontFamily:
-                  "ui-monospace, SFMono-Regular, SFMono, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-                fontSize: "0.95rem"
-              }}
-            >
-              {shareUrl}
-            </code>
-            <button className="copy-button" onClick={handleCopy} type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" style={{ width: 14, height: 14 }}>
-                <rect x="9" y="9" width="10" height="10" rx="2" />
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-              </svg>
-              Copy link
-            </button>
-          </div>
+  const renderSuccess = () => (
+    <section style={{ display: "grid", gap: "1.5rem" }}>
+      <header style={{ display: "grid", gap: "0.65rem" }}>
+        <h1 style={{ fontSize: "2.1rem", fontWeight: 600, lineHeight: 1.2, margin: 0 }}>
+          Secret ready to share.
+        </h1>
+        <p className="text-subtle" style={{ margin: 0, maxWidth: "48ch" }}>
+          Copy the one-time link below and send it to your recipient. It will disappear after it is
+          viewed once or when it expires.
+        </p>
+      </header>
+
+      <div className="copy-input">
+        <code
+          style={{
+            overflowWrap: "anywhere",
+            fontFamily:
+              "ui-monospace, SFMono-Regular, SFMono, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+            fontSize: "0.95rem"
+          }}
+        >
+          {shareUrl}
+        </code>
+        <button className="copy-button" onClick={handleCopy} type="button">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            focusable="false"
+            style={{ width: 14, height: 14 }}
+          >
+            <rect x="9" y="9" width="10" height="10" rx="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+          Copy link
+        </button>
+      </div>
+
+      <div style={{ display: "grid", gap: "0.45rem" }}>
+        <p className="text-subtle" style={{ margin: 0 }}>
+          Keep the secret key safe — anyone with this link can view the message exactly once.
+        </p>
+        {expiryDisplay && (
           <p className="text-subtle" style={{ margin: 0 }}>
-            Keep the secret key safe — anyone with this link can view the message exactly once.
+            Expires at <strong style={{ color: "var(--color-accent-strong)" }}>{expiryDisplay}</strong>.
           </p>
-          {expiryDisplay && (
-            <p className="text-subtle" style={{ margin: 0 }}>
-              Expires at <strong style={{ color: "var(--color-accent-strong)" }}>{expiryDisplay}</strong>.
-            </p>
-          )}
-        </section>
-      )}
+        )}
+      </div>
+
+      <button className="button" type="button" onClick={handleCreateNew}>
+        Create new message
+      </button>
+    </section>
+  );
+
+  const shouldShowSuccess = state.status === "success" && !!shareUrl;
+
+  return (
+    <div className="card" style={{ display: "grid", gap: "2rem" }}>
+      {shouldShowSuccess ? renderSuccess() : renderForm()}
 
       {showCopyPopup && (
         <div className="copy-popup" ref={popupRef}>
