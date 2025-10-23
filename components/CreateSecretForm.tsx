@@ -1,32 +1,45 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
-import { createSecret, type CreateSecretState } from "@/app/actions";
+import { EXPIRY_CHOICES, EXPIRY_OPTIONS, MAX_CHARACTERS } from "@/lib/constants";
 
 const initialState: CreateSecretState = { status: "idle" };
 
-const EXPIRY_OPTIONS = [
-  { value: "15m", label: "15 minutes" },
-  { value: "1h", label: "1 hour" },
-  { value: "4h", label: "4 hours" },
-  { value: "1d", label: "24 hours" },
-  { value: "7d", label: "7 days" }
-];
+const IV_LENGTH = 12;
+const KEY_LENGTH = 32;
+const AUTH_TAG_LENGTH = 16;
 
-function SubmitButton() {
-  const status = useFormStatus();
+type CreateSecretState =
+  | { status: "idle" }
+  | { status: "submitting" }
+  | { status: "success"; secret: { id: string; key: string; expiresAt: string } }
+  | { status: "error"; error: string };
+
+type CreateSecretResponse = {
+  id: string;
+  expiresAt: string;
+};
+
+function encodeBase64Url(bytes: Uint8Array) {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 1) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function SubmitButton({ pending }: { pending: boolean }) {
   return (
-    <button className="button" type="submit" disabled={status.pending}>
-      {status.pending ? "Encrypting…" : "Create one-time secret"}
+    <button className="button" type="submit" disabled={pending}>
+      {pending ? "Encrypting…" : "Create one-time secret"}
     </button>
   );
 }
 
 export function CreateSecretForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const [state, formAction] = useFormState(createSecret, initialState);
+  const [state, setState] = useState<CreateSecretState>(initialState);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
 
@@ -61,6 +74,8 @@ export function CreateSecretForm() {
     return expiresAt.toLocaleString();
   }, [state]);
 
+  const pending = state.status === "submitting";
+
   const handleCopy = async () => {
     if (!shareUrl) return;
     try {
@@ -72,23 +87,132 @@ export function CreateSecretForm() {
     }
   };
 
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const message = (formData.get("message") as string | null)?.trim() ?? "";
+    const expiry = formData.get("expiry") as string | null;
+
+    setCopyStatus(null);
+
+    if (!message) {
+      setState({ status: "error", error: "Enter a secret message to encrypt." });
+      return;
+    }
+
+    if (message.length > MAX_CHARACTERS) {
+      setState({
+        status: "error",
+        error: `Secrets are limited to ${MAX_CHARACTERS} characters.`
+      });
+      return;
+    }
+
+    if (!expiry || !(expiry in EXPIRY_CHOICES)) {
+      setState({
+        status: "error",
+        error: "Select how long the secret should stay available."
+      });
+      return;
+    }
+
+    setState({ status: "submitting" });
+
+    let keyBytes: Uint8Array;
+    let ivBytes: Uint8Array;
+    let ciphertext: string;
+    let authTag: string;
+    let key: string;
+    let iv: string;
+
+    try {
+      keyBytes = new Uint8Array(KEY_LENGTH);
+      crypto.getRandomValues(keyBytes);
+
+      ivBytes = new Uint8Array(IV_LENGTH);
+      crypto.getRandomValues(ivBytes);
+
+      const cryptoKey = await crypto.subtle.importKey("raw", keyBytes, { name: "AES-GCM" }, false, ["encrypt"]);
+      const encoded = new TextEncoder().encode(message);
+      const encrypted = new Uint8Array(
+        await crypto.subtle.encrypt({ name: "AES-GCM", iv: ivBytes }, cryptoKey, encoded)
+      );
+
+      if (encrypted.length <= AUTH_TAG_LENGTH) {
+        throw new Error("Invalid ciphertext length");
+      }
+
+      const authTagBytes = encrypted.slice(encrypted.length - AUTH_TAG_LENGTH);
+      const ciphertextBytes = encrypted.slice(0, encrypted.length - AUTH_TAG_LENGTH);
+
+      ciphertext = encodeBase64Url(ciphertextBytes);
+      authTag = encodeBase64Url(authTagBytes);
+      key = encodeBase64Url(keyBytes);
+      iv = encodeBase64Url(ivBytes);
+    } catch (error) {
+      console.error("Failed to encrypt secret", error);
+      setState({
+        status: "error",
+        error: "Something went wrong while encrypting your secret."
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/secrets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ciphertext,
+          iv,
+          authTag,
+          expiry,
+          messageLength: message.length
+        })
+      });
+
+      if (!response.ok) {
+        let errorMessage = "We could not store your secret. Please try again.";
+        try {
+          const data = await response.json();
+          if (typeof data?.error === "string" && data.error.trim()) {
+            errorMessage = data.error;
+          }
+        } catch {
+          // ignore json parse errors
+        }
+        setState({ status: "error", error: errorMessage });
+        return;
+      }
+
+      const result: CreateSecretResponse = await response.json();
+      setState({
+        status: "success",
+        secret: { id: result.id, key, expiresAt: result.expiresAt }
+      });
+    } catch (error) {
+      console.error("Failed to persist encrypted secret", error);
+      setState({
+        status: "error",
+        error: "We could not store your secret. Please try again."
+      });
+    }
+  };
+
   return (
     <div className="card" style={{ display: "grid", gap: "1.5rem" }}>
       <header style={{ display: "grid", gap: "0.5rem" }}>
         <div className="badge">End-to-end encrypted</div>
         <h1 style={{ fontSize: "2rem", fontWeight: 700, margin: 0 }}>Share secrets safely.</h1>
         <p className="text-subtle" style={{ margin: 0 }}>
-          Encrypt a note with a randomly generated key. The link self-destructs the moment
-          it is opened or when the timer expires.
+          Encrypt a note with a randomly generated key. The link self-destructs the moment it is
+          opened or when the timer expires.
         </p>
       </header>
 
-      <form
-        ref={formRef}
-        action={formAction}
-        style={{ display: "grid", gap: "1rem" }}
-        autoComplete="off"
-      >
+      <form ref={formRef} onSubmit={handleSubmit} style={{ display: "grid", gap: "1rem" }} autoComplete="off">
         <label style={{ display: "grid", gap: "0.5rem" }}>
           <span style={{ fontWeight: 600 }}>Secret message</span>
           <textarea
@@ -97,7 +221,7 @@ export function CreateSecretForm() {
             placeholder="Paste credentials, API keys, or any sensitive text"
             rows={6}
             required
-            maxLength={5000}
+            maxLength={MAX_CHARACTERS}
           />
         </label>
 
@@ -112,7 +236,7 @@ export function CreateSecretForm() {
           </select>
         </label>
 
-        <SubmitButton />
+        <SubmitButton pending={pending} />
       </form>
 
       {state.status === "error" && <div className="alert">{state.error}</div>}
@@ -122,8 +246,8 @@ export function CreateSecretForm() {
           <div className="success">
             <strong style={{ display: "block", marginBottom: "0.5rem" }}>Secret ready</strong>
             <span>
-              Send the link below to your recipient. It can only be opened once before being
-              permanently destroyed.
+              Send the link below to your recipient. It can only be opened once before being permanently
+              destroyed.
             </span>
           </div>
           <div className="copy-input">
@@ -141,8 +265,8 @@ export function CreateSecretForm() {
             </button>
           </div>
           <p className="text-subtle" style={{ margin: 0 }}>
-            Keep the secret key safe — it never touches our servers. Anyone with this link can
-            view the message exactly once.
+            Keep the secret key safe — it never touches our servers. Anyone with this link can view the message exactly
+            once.
           </p>
           {expiryDisplay && (
             <p className="text-subtle" style={{ margin: 0 }}>
