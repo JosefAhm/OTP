@@ -168,8 +168,7 @@ export function CreateSecretForm() {
           ciphertext,
           iv,
           authTag,
-          expiry,
-          messageLength: message.length
+          expiry
         })
       });
 
