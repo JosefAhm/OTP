@@ -17,6 +17,8 @@ type CreateSecretState =
   | { status: "success"; secret: { id: string; key: string; expiresAt: string } }
   | { status: "error"; error: string };
 
+type ActiveView = "form" | "transition" | "success";
+
 type CreateSecretResponse = {
   id: string;
   expiresAt: string;
@@ -44,7 +46,16 @@ export function CreateSecretForm() {
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
   const [showCopyPopup, setShowCopyPopup] = useState(false);
+  const [activeView, setActiveView] = useState<ActiveView>("form");
+  const transitionTimeoutRef = useRef<number | null>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
+
+  const clearTransitionTimeout = () => {
+    if (transitionTimeoutRef.current !== null) {
+      window.clearTimeout(transitionTimeoutRef.current);
+      transitionTimeoutRef.current = null;
+    }
+  };
 
   useEffect(() => {
     if (state.status === "success") {
@@ -53,10 +64,33 @@ export function CreateSecretForm() {
       setShareUrl(url);
       setCopyStatus(null);
       formRef.current?.reset();
+      const prefersReducedMotion =
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      setActiveView(prefersReducedMotion ? "success" : "transition");
     } else {
       setShareUrl(null);
+      setActiveView("form");
     }
   }, [state]);
+
+  useEffect(() => {
+    if (activeView !== "transition") {
+      clearTransitionTimeout();
+      return;
+    }
+
+    transitionTimeoutRef.current = window.setTimeout(() => {
+      setActiveView("success");
+      transitionTimeoutRef.current = null;
+    }, 650);
+
+    return () => {
+      clearTransitionTimeout();
+    };
+  }, [activeView]);
+
+  useEffect(() => () => clearTransitionTimeout(), []);
 
   useEffect(() => {
     if (!copyStatus) return;
@@ -77,8 +111,8 @@ export function CreateSecretForm() {
         setShowCopyPopup(false);
       }
     };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, [showCopyPopup]);
 
   const expiryDisplay = useMemo(() => {
@@ -239,6 +273,8 @@ export function CreateSecretForm() {
   };
 
   const handleCreateNew = () => {
+    clearTransitionTimeout();
+    setActiveView("form");
     setState(initialState);
     setShareUrl(null);
     setCopyStatus(null);
@@ -283,6 +319,32 @@ export function CreateSecretForm() {
     </>
   );
 
+  const renderTransition = () => (
+    <section className="transition-screen" aria-live="assertive" aria-busy={activeView === "transition"}>
+      <div className="transition-icon" aria-hidden="true">
+        <span className="transition-icon__ring" />
+        <span className="transition-icon__check">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+        </span>
+      </div>
+      <h2 style={{ fontSize: "1.5rem", fontWeight: 600, margin: 0 }}>Secret secured</h2>
+      <p className="text-subtle" style={{ margin: 0, maxWidth: "40ch" }}>
+        We encrypted your message and generated a one-time link. Preparing it now…
+      </p>
+    </section>
+  );
+
   const renderSuccess = () => (
     <section style={{ display: "grid", gap: "1.5rem" }}>
       <header style={{ display: "grid", gap: "0.65rem" }}>
@@ -294,6 +356,23 @@ export function CreateSecretForm() {
           viewed once or when it expires.
         </p>
       </header>
+
+      <div className="success-banner" role="status">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
+        <span>Link generated — ready to copy.</span>
+      </div>
 
       <div className="copy-input">
         <code
@@ -346,7 +425,27 @@ export function CreateSecretForm() {
 
   return (
     <div className="card" style={{ display: "grid", gap: "2rem" }}>
-      {shouldShowSuccess ? renderSuccess() : renderForm()}
+      <div className={`view-wrapper view-${activeView}`}>
+        <div className={`view-panel${activeView === "form" ? " is-active" : ""}`} aria-hidden={activeView !== "form"}>
+          {renderForm()}
+        </div>
+        {shouldShowSuccess && (
+          <div
+            className={`view-panel transition-panel${activeView === "transition" ? " is-active" : ""}`}
+            aria-hidden={activeView !== "transition"}
+          >
+            {renderTransition()}
+          </div>
+        )}
+        {shouldShowSuccess && (
+          <div
+            className={`view-panel success-panel${activeView === "success" ? " is-active" : ""}`}
+            aria-hidden={activeView !== "success"}
+          >
+            {renderSuccess()}
+          </div>
+        )}
+      </div>
 
       {showCopyPopup && (
         <div className="copy-popup" ref={popupRef}>
