@@ -66,6 +66,9 @@ export default function SecretPage({ params }: { params: { id: string } }) {
   const [key, setKey] = useState("");
   const [state, setState] = useState<SecretState>({ status: "idle" });
   const [hasRevealed, setHasRevealed] = useState(false);
+  const [expiry, setExpiry] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState<string | null>(null);
+  const [fetchStatus, setFetchStatus] = useState<'loading' | 'ready' | 'invalid'>('loading');
 
   useEffect(() => {
     const fragmentKey = window.location.hash.slice(1).trim();
@@ -74,6 +77,51 @@ export default function SecretPage({ params }: { params: { id: string } }) {
       window.history.replaceState(null, "", window.location.pathname);
     }
   }, []);
+
+  useEffect(() => {
+    fetch(`/api/secrets/${params.id}`)
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        } else if (res.status === 404) {
+          throw new Error('invalid');
+        } else {
+          throw new Error('error');
+        }
+      })
+      .then(data => {
+        if (data.expiresAt) {
+          setExpiry(data.expiresAt);
+          setFetchStatus('ready');
+        }
+      })
+      .catch(err => {
+        if (err.message === 'invalid') {
+          setFetchStatus('invalid');
+        } else {
+          setFetchStatus('invalid'); // treat other errors as invalid too
+        }
+      });
+  }, [params.id]);
+
+  useEffect(() => {
+    if (!expiry) return;
+    const updateTimeLeft = () => {
+      const now = new Date();
+      const exp = new Date(expiry);
+      const diff = exp.getTime() - now.getTime();
+      if (diff <= 0) {
+        setTimeLeft("Expired");
+      } else {
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        setTimeLeft(`${minutes}m ${seconds}s`);
+      }
+    };
+    updateTimeLeft();
+    const interval = setInterval(updateTimeLeft, 1000);
+    return () => clearInterval(interval);
+  }, [expiry]);
 
   const disabled = useMemo(() => state.status === "decrypting", [state.status]);
 
@@ -133,11 +181,28 @@ export default function SecretPage({ params }: { params: { id: string } }) {
             Once decrypted, the message is gone forever. If you reload the page you will not be
             able to recover it.
           </p>
+          {fetchStatus === 'loading' && (
+            <p className="text-subtle" style={{ margin: 0 }}>
+              Checking secret status...
+            </p>
+          )}
+          {fetchStatus === 'ready' && timeLeft && (
+            <p className="text-subtle" style={{ margin: 0, fontWeight: 'bold' }}>
+              Expires in: {timeLeft}
+            </p>
+          )}
+          {fetchStatus === 'invalid' && (
+            <p className="text-subtle" style={{ margin: 0, color: 'red' }}>
+              This secret is no longer available.
+            </p>
+          )}
         </header>
 
-        <button className="button" onClick={revealSecret} disabled={disabled || hasRevealed}>
-          {state.status === "decrypting" ? "Decrypting…" : "Reveal message"}
-        </button>
+        {fetchStatus === 'ready' && (
+          <button className="button" onClick={revealSecret} disabled={disabled || hasRevealed}>
+            {state.status === "decrypting" ? "Decrypting…" : "Reveal message"}
+          </button>
+        )}
 
         {state.status === "error" && <div className="alert">{state.error}</div>}
 

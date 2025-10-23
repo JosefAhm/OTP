@@ -71,7 +71,8 @@ export async function POST(request: Request) {
     return respond({
       ciphertext: data.ciphertext,
       iv: data.iv,
-      authTag: data.auth_tag
+      authTag: data.auth_tag,
+      expiresAt: data.expires_at
     });
   } catch (error) {
     console.error("Unexpected failure while redeeming secret", error);
