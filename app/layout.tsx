@@ -5,7 +5,6 @@ export const metadata: Metadata = {
   title: "One-Time Secrets",
   description:
     "Create encrypted, self-destructing messages that can only be opened once.",
-  icons: [],
 };
 
 export default function RootLayout({
