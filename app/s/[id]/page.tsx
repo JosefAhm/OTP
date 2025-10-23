@@ -212,7 +212,7 @@ export default function SecretPage({ params }: { params: { id: string } }) {
             </p>
           )}
           {fetchStatus === 'invalid' && (
-            <p className="text-subtle" style={{ margin: 0, color: 'red' }}>
+            <p className="text-subtle" style={{ margin: 0, color: '#b91c1c' }}>
               This secret is no longer available.
             </p>
           )}
@@ -227,9 +227,9 @@ export default function SecretPage({ params }: { params: { id: string } }) {
         {state.status === "error" && <div className="alert">{state.error}</div>}
 
         {state.status === "success" && (
-          <article className="card" style={{ background: "rgba(15,23,42,0.55)" }}>
+          <article className="card" style={{ background: "#f3f6ff", boxShadow: "none" }}>
             <header style={{ marginBottom: "0.75rem" }}>
-              <strong style={{ fontSize: "1.1rem" }}>Secret</strong>
+              <strong style={{ fontSize: "1.1rem", color: "#1d4ed8" }}>Secret</strong>
             </header>
             <pre
               style={{

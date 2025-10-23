@@ -304,7 +304,7 @@ export function CreateSecretForm() {
           </p>
           {expiryDisplay && (
             <p className="text-subtle" style={{ margin: 0 }}>
-              Expires at <strong style={{ color: "rgba(226,232,240,0.95)" }}>{expiryDisplay}</strong>.
+              Expires at <strong style={{ color: "#1d4ed8" }}>{expiryDisplay}</strong>.
             </p>
           )}
         </section>

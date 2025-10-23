@@ -9,30 +9,37 @@ export default function HomePage() {
   return (
     <main className="container" style={{ paddingTop: "4rem", paddingBottom: "4rem" }}>
       <CreateSecretForm />
-      <section style={{ marginTop: "2.5rem", color: "white", fontSize: "0.95rem" }}>
+      <section style={{ marginTop: "2.5rem", color: "#1f2937", fontSize: "0.95rem" }}>
         <div style={{ position: "relative", width: "100%" }}>
           <button
             onClick={() => setExpanded(!expanded)}
             aria-expanded={expanded}
             aria-controls="howitworks-content"
             style={{
-              background: 'none',
-              border: 'none',
-              color: 'inherit',
-              fontFamily: 'inherit',
-              fontSize: '1.1rem',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
+              background: "none",
+              border: "none",
+              color: "#0f172a",
+              fontFamily: "inherit",
+              fontSize: "1.1rem",
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
               padding: 0,
-              marginBottom: '0.75rem'
+              marginBottom: "0.75rem"
             }}
           >
             How it works
-            <span style={{ fontSize: '1.2rem', fontWeight: 'bold', fontFamily: 'inherit' }}>
-              {expanded ? '−' : '+'}
+            <span
+              style={{
+                fontSize: "1.2rem",
+                fontWeight: 700,
+                fontFamily: "inherit",
+                color: "#2563eb"
+              }}
+            >
+              {expanded ? "−" : "+"}
             </span>
           </button>
 
@@ -43,21 +50,31 @@ export default function HomePage() {
               role="region"
               aria-label="How it works"
               style={{
-                position: 'absolute',
+                position: "absolute",
                 left: 0,
-                top: '100%',
-                marginTop: '0.25rem',
+                top: "100%",
+                marginTop: "0.25rem",
                 zIndex: 60,
-                width: '100%',
-                background: 'rgba(15, 23, 42, 0.95)',
-                border: '1px solid rgba(148, 163, 184, 0.12)',
-                borderRadius: '0.25rem',
-                padding: '0.75rem 1rem',
-                boxShadow: '0 6px 18px rgba(2,6,23,0.6)',
-                maxWidth: '100%',
+                width: "100%",
+                background: "#ffffff",
+                border: "1px solid #dbe2ef",
+                borderRadius: "0.5rem",
+                padding: "1rem 1.25rem",
+                boxShadow: "0 18px 36px rgba(15, 23, 42, 0.12)",
+                maxWidth: "100%",
               }}
             >
-              <ol style={{ display: "grid", gap: "0.5rem", paddingLeft: "1.25rem", margin: 0, maxHeight: 320, overflow: 'auto' }}>
+              <ol
+                style={{
+                  display: "grid",
+                  gap: "0.5rem",
+                  paddingLeft: "1.25rem",
+                  margin: 0,
+                  maxHeight: 320,
+                  overflow: "auto",
+                  color: "#334155"
+                }}
+              >
                 <li>
                   Your secret is encrypted in your browser session before it is sent to the database with
                   a random key.

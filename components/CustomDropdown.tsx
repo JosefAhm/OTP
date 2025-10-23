@@ -103,14 +103,14 @@ export default function CustomDropdown({
       <button
         ref={buttonRef}
         type="button"
-        className="input"
+        className={`input dropdown-trigger${open ? " is-open" : ""}`}
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={toggle}
         onKeyDown={onButtonKeyDown}
       >
         {options.find((o) => o.value === value)?.label ?? "Select..."}
-        <span aria-hidden style={{ marginLeft: "0.5rem" }}>
+        <span aria-hidden className={`dropdown-arrow${open ? " open" : ""}`} style={{ marginLeft: "0.5rem" }}>
           ▾
         </span>
       </button>
@@ -154,9 +154,12 @@ export default function CustomDropdown({
                 }}
                 onMouseEnter={() => setHighlightIndex(idx)}
                 style={{
-                  background: highlighted ? "rgb(30, 41, 59)" : "transparent",
-                  padding: "0.5rem",
+                  background: highlighted ? "#e7efff" : "transparent",
+                  color: highlighted || selected ? "#1d4ed8" : "#1f2937",
+                  fontWeight: selected ? 600 : 500,
+                  padding: "0.5rem 0.75rem",
                   cursor: "pointer",
+                  borderRadius: "0.375rem",
                 }}
               >
                 {opt.label}
