@@ -228,9 +228,6 @@ export default function SecretPage({ params }: { params: { id: string } }) {
 
         {state.status === "success" && (
           <article className="card" style={{ background: "#f3f6ff", boxShadow: "none" }}>
-            <header style={{ marginBottom: "0.75rem" }}>
-              <strong style={{ fontSize: "1.1rem", color: "#1d4ed8" }}>Secret</strong>
-            </header>
             <pre
               style={{
                 margin: 0,
