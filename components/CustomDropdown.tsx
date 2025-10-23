@@ -154,12 +154,12 @@ export default function CustomDropdown({
                 }}
                 onMouseEnter={() => setHighlightIndex(idx)}
                 style={{
-                  background: highlighted ? "#e7efff" : "transparent",
-                  color: highlighted || selected ? "#1d4ed8" : "#1f2937",
+                  background: highlighted ? "var(--color-accent-soft)" : "transparent",
+                  color: highlighted || selected ? "var(--color-accent-strong)" : "var(--color-text)",
                   fontWeight: selected ? 600 : 500,
                   padding: "0.5rem 0.75rem",
                   cursor: "pointer",
-                  borderRadius: "0.375rem",
+                  borderRadius: "var(--radius-md)",
                 }}
               >
                 {opt.label}

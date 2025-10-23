@@ -239,18 +239,20 @@ export function CreateSecretForm() {
   };
 
   return (
-    <div className="card" style={{ display: "grid", gap: "1.5rem" }}>
-      <header style={{ display: "grid", gap: "0.5rem" }}>
-        <h1 style={{ fontSize: "2rem", fontWeight: 700, margin: 0 }}>Share secrets safely.</h1>
-        <p className="text-subtle" style={{ margin: 0 }}>
+    <div className="card" style={{ display: "grid", gap: "2rem" }}>
+      <header style={{ display: "grid", gap: "0.65rem" }}>
+        <h1 style={{ fontSize: "2.1rem", fontWeight: 600, lineHeight: 1.2, margin: 0 }}>
+          Share secrets safely.
+        </h1>
+        <p className="text-subtle" style={{ margin: 0, maxWidth: "42ch" }}>
           Encrypt a note with a randomly generated key. The link self-destructs the moment it is
           opened or when the timer expires.
         </p>
       </header>
 
-      <form ref={formRef} onSubmit={handleSubmit} style={{ display: "grid", gap: "1rem" }} autoComplete="off">
-        <label style={{ display: "grid", gap: "0.5rem" }}>
-          <span style={{ fontWeight: 600 }}>Secret message</span>
+      <form ref={formRef} onSubmit={handleSubmit} style={{ display: "grid", gap: "1.25rem" }} autoComplete="off">
+        <label style={{ display: "grid", gap: "0.45rem" }}>
+          <span style={{ fontWeight: 600, color: "var(--color-text)" }}>Secret message</span>
           <textarea
             className="input"
             name="message"
@@ -262,8 +264,8 @@ export function CreateSecretForm() {
           />
         </label>
 
-        <label style={{ display: "grid", gap: "0.5rem" }}>
-          <span style={{ fontWeight: 600 }}>Expiry</span>
+        <label style={{ display: "grid", gap: "0.45rem" }}>
+          <span style={{ fontWeight: 600, color: "var(--color-text)" }}>Expiry</span>
           <CustomDropdown name="expiry" options={EXPIRY_OPTIONS as any} defaultValue={"1h"} />
         </label>
 
@@ -273,13 +275,14 @@ export function CreateSecretForm() {
       {state.status === "error" && <div className="alert">{state.error}</div>}
 
       {state.status === "success" && shareUrl && (
-        <section style={{ display: "grid", gap: "0.75rem" }}>
+        <section style={{ display: "grid", gap: "0.9rem" }}>
           <div className="copy-input">
             <code
               style={{
                 overflowWrap: "anywhere",
                 fontFamily:
-                  "ui-monospace, SFMono-Regular, SFMono, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+                  "ui-monospace, SFMono-Regular, SFMono, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+                fontSize: "0.95rem"
               }}
             >
               {shareUrl}
@@ -297,7 +300,7 @@ export function CreateSecretForm() {
           </p>
           {expiryDisplay && (
             <p className="text-subtle" style={{ margin: 0 }}>
-              Expires at <strong style={{ color: "#1d4ed8" }}>{expiryDisplay}</strong>.
+              Expires at <strong style={{ color: "var(--color-accent-strong)" }}>{expiryDisplay}</strong>.
             </p>
           )}
         </section>
