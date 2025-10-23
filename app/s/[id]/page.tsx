@@ -135,19 +135,6 @@ export default function SecretPage({ params }: { params: { id: string } }) {
           </p>
         </header>
 
-        <label style={{ display: "grid", gap: "0.5rem" }}>
-          <span style={{ fontWeight: 600 }}>Secret key</span>
-          <input
-            className="input"
-            placeholder="Paste the key from the shared link"
-            value={key}
-            onChange={(event) => setKey(event.target.value)}
-            disabled={disabled || hasRevealed}
-            spellCheck={false}
-            autoComplete="off"
-          />
-        </label>
-
         <button className="button" onClick={revealSecret} disabled={disabled || hasRevealed}>
           {state.status === "decrypting" ? "Decrypting…" : "Reveal message"}
         </button>
@@ -157,7 +144,7 @@ export default function SecretPage({ params }: { params: { id: string } }) {
         {state.status === "success" && (
           <article className="card" style={{ background: "rgba(15,23,42,0.55)" }}>
             <header style={{ marginBottom: "0.75rem" }}>
-              <strong style={{ fontSize: "1.1rem" }}>Decrypted message</strong>
+              <strong style={{ fontSize: "1.1rem" }}>Secret</strong>
             </header>
             <pre
               style={{

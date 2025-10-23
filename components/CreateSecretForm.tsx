@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { EXPIRY_CHOICES, EXPIRY_OPTIONS, MAX_CHARACTERS } from "@/lib/constants";
+import CustomDropdown from "./CustomDropdown";
 
 const initialState: CreateSecretState = { status: "idle" };
 
@@ -42,6 +43,8 @@ export function CreateSecretForm() {
   const [state, setState] = useState<CreateSecretState>(initialState);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
+  const [showCopyPopup, setShowCopyPopup] = useState(false);
+  const popupRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -60,6 +63,23 @@ export function CreateSecretForm() {
     const timeout = setTimeout(() => setCopyStatus(null), 3000);
     return () => clearTimeout(timeout);
   }, [copyStatus]);
+
+  useEffect(() => {
+    if (!showCopyPopup) return;
+    const timeout = setTimeout(() => setShowCopyPopup(false), 3000);
+    return () => clearTimeout(timeout);
+  }, [showCopyPopup]);
+
+  useEffect(() => {
+    if (!showCopyPopup) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
+        setShowCopyPopup(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showCopyPopup]);
 
   const expiryDisplay = useMemo(() => {
     if (state.status !== "success") {
@@ -81,9 +101,11 @@ export function CreateSecretForm() {
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopyStatus("Copied to clipboard");
+      setShowCopyPopup(true);
     } catch (error) {
       console.error("Failed to copy secret link", error);
       setCopyStatus("Copy failed. Manually copy the link above.");
+      setShowCopyPopup(true);
     }
   };
 
@@ -221,18 +243,13 @@ export function CreateSecretForm() {
             rows={6}
             required
             maxLength={MAX_CHARACTERS}
+            style={{ resize: 'none' }}
           />
         </label>
 
         <label style={{ display: "grid", gap: "0.5rem" }}>
           <span style={{ fontWeight: 600 }}>Expiry</span>
-          <select className="input" name="expiry" defaultValue="1h" required>
-            {EXPIRY_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <CustomDropdown name="expiry" options={EXPIRY_OPTIONS as any} defaultValue={"1h"} />
         </label>
 
         <SubmitButton pending={pending} />
@@ -242,13 +259,6 @@ export function CreateSecretForm() {
 
       {state.status === "success" && shareUrl && (
         <section style={{ display: "grid", gap: "0.75rem" }}>
-          <div className="success">
-            <strong style={{ display: "block", marginBottom: "0.5rem" }}>Secret ready</strong>
-            <span>
-              Send the link below to your recipient. It can only be opened once before being permanently
-              destroyed.
-            </span>
-          </div>
           <div className="copy-input">
             <code
               style={{
@@ -272,8 +282,13 @@ export function CreateSecretForm() {
               Expires at <strong style={{ color: "rgba(226,232,240,0.95)" }}>{expiryDisplay}</strong>.
             </p>
           )}
-          {copyStatus && <span className="text-subtle">{copyStatus}</span>}
         </section>
+      )}
+
+      {showCopyPopup && (
+        <div className="copy-popup" ref={popupRef}>
+          {copyStatus}
+        </div>
       )}
     </div>
   );
