@@ -19,11 +19,32 @@ export default function CustomDropdown({
   const [highlightIndex, setHighlightIndex] = useState<number | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!open) {
       setHighlightIndex(null);
     }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handleOutsideClick(event: MouseEvent | TouchEvent) {
+      const target = event.target as Node | null;
+      if (target && !containerRef.current?.contains(target)) {
+        setOpen(false);
+        setHighlightIndex(null);
+      }
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
   }, [open]);
 
   const toggle = () => setOpen((s) => !s);
@@ -75,7 +96,7 @@ export default function CustomDropdown({
   }
 
   return (
-    <div className="custom-dropdown" style={{ position: "relative" }}>
+    <div ref={containerRef} className="custom-dropdown" style={{ position: "relative" }}>
       {/* Hidden input keeps native form behavior */}
       <input type="hidden" name={name} value={value} readOnly />
 
@@ -119,7 +140,18 @@ export default function CustomDropdown({
                 key={opt.value}
                 role="option"
                 aria-selected={selected}
-                onClick={(e) => { e.stopPropagation(); handleSelect(opt.value); }}
+                // Use pointer down so selecting the already-selected value still closes the menu
+                onPointerDown={(e) => {
+                  // Prevent the button's onClick from toggling the menu after selection
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSelect(opt.value);
+                }}
+                onClick={(e) => {
+                  // Fallback for environments without Pointer Events
+                  e.stopPropagation();
+                  handleSelect(opt.value);
+                }}
                 onMouseEnter={() => setHighlightIndex(idx)}
                 style={{
                   background: highlighted ? "rgb(30, 41, 59)" : "transparent",

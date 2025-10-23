@@ -156,11 +156,27 @@ export function CreateSecretForm() {
       ivBytes = new Uint8Array(IV_LENGTH);
       crypto.getRandomValues(ivBytes);
 
-      const cryptoKey = await crypto.subtle.importKey("raw", keyBytes, { name: "AES-GCM" }, false, ["encrypt"]);
-      const encoded = new TextEncoder().encode(message);
-      const encrypted = new Uint8Array(
-        await crypto.subtle.encrypt({ name: "AES-GCM", iv: ivBytes }, cryptoKey, encoded)
+      // Web Crypto expects BufferSource (ArrayBuffer or view). Use the underlying ArrayBuffer
+      // slices to avoid issues in some browsers/environments.
+      const keyBuffer = keyBytes.buffer.slice(keyBytes.byteOffset, keyBytes.byteOffset + keyBytes.byteLength);
+      const cryptoKey = await crypto.subtle.importKey(
+        "raw",
+        keyBuffer as unknown as BufferSource,
+        { name: "AES-GCM" },
+        false,
+        ["encrypt"]
       );
+
+      const encoded = new TextEncoder().encode(message);
+      const encodedBuffer = encoded.buffer.slice(encoded.byteOffset, encoded.byteOffset + encoded.byteLength);
+      const ivBuffer = ivBytes.buffer.slice(ivBytes.byteOffset, ivBytes.byteOffset + ivBytes.byteLength);
+
+      const encryptedBuf = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: ivBuffer as unknown as BufferSource },
+        cryptoKey,
+        encodedBuffer as unknown as BufferSource
+      );
+      const encrypted = new Uint8Array(encryptedBuf);
 
       if (encrypted.length <= AUTH_TAG_LENGTH) {
         throw new Error("Invalid ciphertext length");
@@ -225,7 +241,13 @@ export function CreateSecretForm() {
   return (
     <div className="card" style={{ display: "grid", gap: "1.5rem" }}>
       <header style={{ display: "grid", gap: "0.5rem" }}>
-        <div className="badge">End-to-end encrypted</div>
+        <div className="badge badge-box" title="End-to-end encrypted" aria-label="End-to-end encrypted">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" style={{ width: 14, height: 14 }}>
+            <rect x="3" y="11" width="18" height="10" rx="2" />
+            <path d="M7 11V8a5 5 0 0 1 10 0v3" />
+          </svg>
+          <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>Encrypted</span>
+        </div>
         <h1 style={{ fontSize: "2rem", fontWeight: 700, margin: 0 }}>Share secrets safely.</h1>
         <p className="text-subtle" style={{ margin: 0 }}>
           Encrypt a note with a randomly generated key. The link self-destructs the moment it is
@@ -270,6 +292,10 @@ export function CreateSecretForm() {
               {shareUrl}
             </code>
             <button className="copy-button" onClick={handleCopy} type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" style={{ width: 14, height: 14 }}>
+                <rect x="9" y="9" width="10" height="10" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
               Copy link
             </button>
           </div>

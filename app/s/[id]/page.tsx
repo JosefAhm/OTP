@@ -113,9 +113,23 @@ export default function SecretPage({ params }: { params: { id: string } }) {
       if (diff <= 0) {
         setTimeLeft("Expired");
       } else {
-        const minutes = Math.floor(diff / 60000);
-        const seconds = Math.floor((diff % 60000) / 1000);
-        setTimeLeft(`${minutes}m ${seconds}s`);
+        // Calculate days, hours, minutes, seconds
+        let remaining = Math.floor(diff / 1000);
+        const days = Math.floor(remaining / 86400);
+        remaining %= 86400;
+        const hours = Math.floor(remaining / 3600);
+        remaining %= 3600;
+        const minutes = Math.floor(remaining / 60);
+        const seconds = remaining % 60;
+
+        // Build a compact string, skipping zero-value leading units
+        const parts: string[] = [];
+        if (days > 0) parts.push(`${days}d`);
+        if (hours > 0) parts.push(`${hours}h`);
+        if (minutes > 0) parts.push(`${minutes}m`);
+        if (seconds > 0 || parts.length === 0) parts.push(`${seconds}s`);
+
+        setTimeLeft(parts.join(" "));
       }
     };
     updateTimeLeft();
@@ -175,7 +189,13 @@ export default function SecretPage({ params }: { params: { id: string } }) {
     <main className="container" style={{ paddingTop: "4rem", paddingBottom: "4rem" }}>
       <div className="card" style={{ display: "grid", gap: "1.25rem" }}>
         <header style={{ display: "grid", gap: "0.5rem" }}>
-          <div className="badge">One-time access</div>
+          <div className="badge badge-box" title="One-time access" aria-label="One-time access">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" style={{ width: 14, height: 14 }}>
+              <rect x="3" y="11" width="18" height="10" rx="2" />
+              <path d="M7 11V8a5 5 0 0 1 10 0v3" />
+            </svg>
+            <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>One-time</span>
+          </div>
           <h1 style={{ margin: 0 }}>Reveal secret</h1>
           <p className="text-subtle" style={{ margin: 0 }}>
             Once decrypted, the message is gone forever. If you reload the page you will not be

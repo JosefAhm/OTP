@@ -11,6 +11,11 @@ body {
   height: 100%;
 }
 
+/* Reserve scrollbar space to avoid horizontal shifts when content height changes */
+html {
+  overflow-y: scroll;
+}
+
 body {
   margin: 0;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -90,15 +95,27 @@ select {
 }
 
 .badge {
-  display: inline-block;
+  display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  background-color: rgba(56, 189, 248, 0.12);
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background-color: rgba(56, 189, 248, 0.08);
   color: rgb(125, 211, 252);
   font-weight: 600;
   letter-spacing: 0.02em;
-  font-size: 0.7rem;
+  font-size: 0.95rem;
+  border: 1px solid rgba(125, 211, 252, 0.08);
+}
+
+.badge-box {
+  border-radius: 0.35rem;
+  padding: 0.2rem 0.45rem;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  height: 28px;
 }
 
 .copy-input {
@@ -113,17 +130,32 @@ select {
 }
 
 .copy-button {
-  padding: 0.5rem 1rem;
-  border-radius: 0.65rem;
-  background-color: rgba(14, 165, 233, 0.85);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(180deg, rgba(14,165,233,0.95), rgba(2,132,199,0.95));
   color: white;
-  font-weight: 600;
+  font-weight: 700;
   border: none;
   cursor: pointer;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.35);
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
 }
 
 .copy-button:hover {
-  background-color: rgba(14, 165, 233, 1);
+  transform: translateY(-2px);
+  filter: brightness(1.03);
+}
+
+.copy-button:active {
+  transform: translateY(0);
+}
+
+.copy-button:focus {
+  outline: 3px solid rgba(14,165,233,0.18);
+  outline-offset: 2px;
 }
 
 .alert {
@@ -174,4 +206,6 @@ select {
   z-index: 1000;
   font-size: 0.9rem;
 }
+
+/* Animations removed for create/reveal actions per user request */
 
