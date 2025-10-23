@@ -117,11 +117,6 @@ select {
   transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
 }
 
-.button:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.03);
-}
-
 .button:focus-visible {
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
 }
@@ -187,11 +182,6 @@ select {
   transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
 }
 
-.copy-button:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.05);
-}
-
 .copy-button:active {
   transform: translateY(0);
 }
@@ -247,7 +237,6 @@ select {
 
 .dropdown-arrow {
   display: inline-block;
-  transition: transform 150ms ease;
   color: var(--color-accent-strong);
 }
 
