@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "One-Time Secrets",
+  title: "OTP - One Time Password",
   description:
     "Create encrypted, self-destructing messages that can only be opened once.",
 };
