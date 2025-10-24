@@ -62,7 +62,12 @@ export function generateTOTP(secretBase32: string, digits = 6, step = 30, forTim
   buffer.writeUInt32BE(Math.floor(time / Math.pow(2, 32)), 0); // high
   buffer.writeUInt32BE(time & 0xffffffff, 4); // low
 
-  const hmac = crypto.createHmac('sha1', key).update(buffer).digest();
+  // TypeScript's lib typings prefer Uint8Array for crypto operations in some environments.
+  // Cast the Node Buffer to Uint8Array to satisfy the compiler while keeping runtime behavior.
+  // Work around strict typing differences between Node Buffer and the TypeScript lib typings for
+  // BinaryLike by casting the inputs to `any`. This keeps runtime behavior unchanged while
+  // satisfying the compiler in mixed environments.
+  const hmac = crypto.createHmac('sha1', key as any).update(buffer as any).digest();
   const offset = hmac[hmac.length - 1] & 0x0f;
   const binary = ((hmac[offset] & 0x7f) << 24) | ((hmac[offset + 1] & 0xff) << 16) | ((hmac[offset + 2] & 0xff) << 8) | (hmac[offset + 3] & 0xff);
 
